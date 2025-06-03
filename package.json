@@ -4,8 +4,8 @@
 	"description": "The official PokéHunt Discord Bot",
 	"main": "src/index.ts",
 	"repository": "https://github.com/pokehunt-xyz/discord.git",
-	"author": "Pokehunt Team <support@pokehunt.xyz>",
-	"license": "GPL-3.0",
+	"author": "Pokehunt Team <support [at] pokehunt.xyz>",
+	"license": "AGPL-3.0-or-later",
 	"scripts": {
 		"build": "npx tsc",
 		"dev": "tsc-watch --onSuccess \"node dist/index.js\"",
