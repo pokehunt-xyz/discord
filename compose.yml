@@ -1,0 +1,11 @@
+services:
+  pokehunt-discord:
+    container_name: pokehunt-discord
+    image: ghcr.io/pokehunt-xyz/discord:latest
+    restart: unless-stopped
+    environment:
+      - DISCORD_BOT_TOKEN=${BOT_DISCORD_TOKEN}
+      - API_URL=https://api.pokehunt.xyz
+      - API_KEY=${API_KEY}
+      - API_WS_KEY=${API_WS_KEY}
+      - RESET_SLASH_COMMANDS=false

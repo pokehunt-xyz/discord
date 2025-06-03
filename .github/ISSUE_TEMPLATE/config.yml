@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and Help
+    url: https://discord.com/invite/cpYkJzd
+    about: This issue tracker is for bugs only, not general support questions. Please join our Discord server if you have any question and/or need help.
+  - name: 🚀 Feature Request
+    url: https://github.com/pokehunt-xyz/discord/discussions/new?category=feature-requests
+    about: Remember to search for existing feature requests and "up-vote" any you like
