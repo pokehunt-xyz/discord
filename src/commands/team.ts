@@ -39,10 +39,10 @@ export default {
 		switch (interaction.options.getSubcommand()) {
 			case 'add':
 			case 'remove': {
-				const team = interaction.options.getString('team', true);
+				const name = interaction.options.getString('team', true);
 				const id = interaction.options.getString('id', true);
 
-				return await runCommand(interaction, now, `team ${interaction.options.getSubcommand()}`, { team, id });
+				return await runCommand(interaction, now, `team ${interaction.options.getSubcommand()}`, { name, id });
 			}
 
 			case 'create': {
