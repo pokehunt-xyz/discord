@@ -22,4 +22,4 @@ Please make sure to update tests as appropriate.
 
 ## Setup development environment
 
-Install the [prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) and [eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) in visual studio code.
+Install the [eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) plugin in visual studio code.

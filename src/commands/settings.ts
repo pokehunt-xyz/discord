@@ -25,7 +25,7 @@ export default {
 				.setDescription('Enable/disable DM notifications')
 				.addBooleanOption((option) => option.setName('enable').setDescription('Enable DM notifications'))
 		)
-		.addSubcommand((subcommand) => subcommand.setName('link').setDescription('Link your account with telegram'))
+		.addSubcommand((subcommand) => subcommand.setName('link').setDescription('Link your account with Telegram'))
 		.addSubcommand((subcommand) => subcommand.setName('view').setDescription('View all your settings'))
 		.addSubcommand((subcommand) => subcommand.setName('reset').setDescription('Reset all your settings'))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),

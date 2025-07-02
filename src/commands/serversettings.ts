@@ -17,14 +17,14 @@ export default {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('spawns')
-				.setDescription('Disable Pokémon SPAWNS in a specific channel')
+				.setDescription('Disable Pokémon spawns in a specific channel')
 				.addChannelOption((option) => option.setName('channel').setDescription('The channel Pokémon spawns should be disabled in'))
 				.addBooleanOption((option) => option.setName('enable').setDescription('Enable Pokémon spawns'))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('commands')
-				.setDescription('Disable Pokémon COMMANDS in a specific channel')
+				.setDescription('Disable commands in a specific channel')
 				.addChannelOption((option) => option.setName('channel').setDescription('The channel Pokémon commands should be disabled in'))
 				.addBooleanOption((option) => option.setName('enable').setDescription('Enable Pokémon commands'))
 		)
