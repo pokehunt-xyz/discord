@@ -13,6 +13,7 @@ export default {
 				.setDescription('The type of items you want to view')
 				.addChoices(
 					{ name: 'Experience + level blockers & boosters', value: 'xp' },
+					{ name: 'EV items', value: 'ev' },
 					{ name: 'Evolution Stones', value: 'stones' },
 					{ name: 'Evolution Items', value: 'evolution' },
 					{ name: 'Remove item or stone', value: 'remove' },
