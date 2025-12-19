@@ -28,7 +28,7 @@ export default {
 		try {
 			if (interaction instanceof ChatInputCommandInteraction) {
 				const command = interaction.client.commands.get(interaction.commandName);
-				if (interaction.commandName === 'donate') await interaction.deferReply({ ephemeral: true });
+				if (interaction.commandName === 'donate' || interaction.commandName === 'courtyard') await interaction.deferReply({ ephemeral: true });
 				else await interaction.deferReply();
 
 				if (!command) interaction.editReply({ content: 'That command does not exists!' });
