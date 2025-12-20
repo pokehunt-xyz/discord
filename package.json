@@ -1,6 +1,6 @@
 {
 	"name": "pokehunt-discord",
-	"version": "3.4.1",
+	"version": "3.5.0",
 	"description": "The official PokéHunt Discord Bot",
 	"main": "src/index.ts",
 	"repository": "https://github.com/pokehunt-xyz/discord.git",
