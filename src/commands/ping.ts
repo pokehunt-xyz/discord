@@ -11,8 +11,7 @@ export default {
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {
 		return await runCommand(interaction, now, 'ping', {
-			discord: interaction.client.ws.ping,
-			client: Date.now() - interaction.createdTimestamp,
+			client: now - interaction.createdTimestamp,
 		});
 	},
 };
