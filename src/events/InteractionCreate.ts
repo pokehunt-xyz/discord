@@ -37,8 +37,9 @@ export default {
 
 				// Wait for BOTH to finish before editing
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [_, cmdRes] = await Promise.all([deferPromise, cmdPromise]);
-				await interaction.editReply(cmdRes);
+				const [_, cmdResult] = await Promise.allSettled([deferPromise, cmdPromise]);
+				if (cmdResult.status === 'fulfilled') await interaction.editReply(cmdResult.value);
+				else throw cmdResult.reason;
 			} else {
 				// Start deferring, but DON'T await it yet
 				const deferPromise = interaction.deferUpdate();
@@ -48,8 +49,9 @@ export default {
 
 				// Wait for BOTH to finish before editing
 				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [_, cmdRes] = await Promise.all([deferPromise, cmdPromise]);
-				await interaction.editReply(cmdRes);
+				const [_, cmdResult] = await Promise.allSettled([deferPromise, cmdPromise]);
+				if (cmdResult.status === 'fulfilled') await interaction.editReply(cmdResult.value);
+				else throw cmdResult.reason;
 			}
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (error: any) {

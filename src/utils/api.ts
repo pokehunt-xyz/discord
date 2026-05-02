@@ -4,29 +4,32 @@ import {
 	ButtonBuilder,
 	ButtonInteraction,
 	ButtonStyle,
+	ChannelType,
 	ChatInputCommandInteraction,
+	Client,
 	EmbedBuilder,
 	GuildMember,
 	Message,
-	ShardingManager,
+	PermissionFlagsBits,
 	StringSelectMenuBuilder,
 	StringSelectMenuInteraction,
 	StringSelectMenuOptionBuilder,
 	User,
 } from 'discord.js';
+import { randomUUID } from 'node:crypto';
 import WebSocket from 'ws';
 
-import { APIError, IgnoreError } from './error';
+import { APIError, CustomError } from './error';
 import {
 	APICommandResponse,
-	APIDiscordWSPayloadCallback,
-	APIDiscordWSPayloadCommand,
-	APIDiscordWSPayloadGuilds,
-	APIDiscordWSPayloadSend,
-	APIDiscordWSResponse,
+	WSDiscordResponse,
 	CommandResponse,
+	WSDiscordSend,
+	WSDiscordGuilds,
+	WSDiscordCallback,
+	WSDiscordCommand,
+	WSDiscordInvalidResponse,
 } from './types';
-import { randomUUID } from 'node:crypto';
 
 const API_URL = process.env.API_URL ?? 'https://api.pokehunt.xyz';
 const API_KEY = process.env.API_KEY;
@@ -37,15 +40,7 @@ if (!API_WS_KEY) throw new Error('No pokehunt API WS key specified!');
 let ws: WebSocket | null = null;
 let wsQueue: string[] = [];
 
-const pendingReplies = new Map<string, { resolve: (v: CommandResponse) => void; timeout: NodeJS.Timeout }>();
-
-export function createMainWs(manager: ShardingManager): void {
-	createWsConnection(manager, null);
-}
-
-export function createShardWs(shard: number): void {
-	createWsConnection(null, shard);
-}
+const pendingReplies = new Map<string, { resolve: (v: CommandResponse) => void; reject: (e: Error) => void; timeout: NodeJS.Timeout }>();
 
 /**
  * This method will create a websocket connection to the Pokéhunt API
@@ -54,10 +49,11 @@ export function createShardWs(shard: number): void {
  * Uses the environment variable `API_URL` and `API_WS_KEY` for the URL and secret key.
  * Will try to re-connect after 5 seconds if disconnected.
  *
- * @param manager - The Discord.js sharing manager
+ * @param client - The Discord.js client
  */
-function createWsConnection(manager: ShardingManager | null, shard: number | null): void {
-	const auth = ['Authorization', 'discord', API_WS_KEY as string, shard === null ? 'null' : shard.toString()];
+export function createWsConnection(client: Client): void {
+	const shard = client.shard!.ids[0].toString() || 'null'; // TODO: it is not possible to have multiple shards?
+	const auth = ['Authorization', 'discord', API_WS_KEY as string, shard];
 	const tempWs = new WebSocket(API_URL.replace('http', 'ws') + '/client', auth); // https -> wss, http -> ws
 	ws = tempWs;
 
@@ -66,8 +62,6 @@ function createWsConnection(manager: ShardingManager | null, shard: number | nul
 		if (shard !== null) console.log(`[SHARD #${shard}] Connected to the Pokéhunt API`);
 		else console.log('Connected to the Pokéhunt API');
 
-		// tempWs.send(JSON.stringify({ platform: 'discord', shard }));
-
 		// Empty the queue
 		for (const msg of wsQueue) {
 			tempWs.send(msg);
@@ -75,32 +69,37 @@ function createWsConnection(manager: ShardingManager | null, shard: number | nul
 		wsQueue = [];
 
 		tempWs.onmessage = async (data): Promise<void> => {
-			const json: APIDiscordWSResponse = JSON.parse(data.data.toString());
+			const json: WSDiscordResponse | WSDiscordInvalidResponse = JSON.parse(data.data.toString());
 
-			if (json.event === 'reply' && pendingReplies.has(json.payloadID)) {
-				const { resolve, timeout } = pendingReplies.get(json.payloadID)!;
+			if (json.event === 'reply') {
+				if (!pendingReplies.has(json.payloadID)) return;
+				const { resolve, reject, timeout } = pendingReplies.get(json.payloadID)!;
+
 				clearTimeout(timeout);
 				pendingReplies.delete(json.payloadID);
 
-				// TODO-ws: no status codes anymore, so what if invalid API key etc (see handleCommandResponse)
-				resolve(await parseCommandResponse(json));
+				if ('status' in json) {
+					switch (json.status) {
+						case 400:
+							return reject(new APIError('An invalid API request was made')); // Malformed request
+						case 401:
+							return reject(new APIError('An invalid API key is provided')); // Invalid API key
+						default:
+							return reject(new APIError(`The API server is not responding correctly (${json.status})`)); // Other error codes than success (200)
+					}
+				}
 
-				return;
+				return resolve(parseCommandResponse(json));
 			} else {
-				async function sendMessage(client, json): Promise<void> {
-					// eslint-disable-next-line @typescript-eslint/no-require-imports
-					const { ChannelType, PermissionFlagsBits } = require('discord.js');
-					// eslint-disable-next-line @typescript-eslint/no-require-imports
-					const { parseCommandResponse } = require('../../../../dist/utils/api.js'); // weird path as we are in node_modules/discord.js/src/client
-
+				try {
 					let channel;
 					if (json.event === 'dm') {
-						if (!client.shard.ids.includes(0)) return; // only allow shard 0 to send DM
+						if (!client.shard?.ids.includes(0)) return; // only allow shard 0 to send DM
 						channel = await client.users.fetch(json.channelID);
-						if (!channel) return;
+						if (!channel) return; // invalid user
 					} else if (json.event === 'levelup' || json.event === 'spawn') {
 						channel = await client.channels.fetch(json.channelID);
-						if (!channel) return;
+						if (!channel) return; // we do not have access to this channel, let other shard handle it
 
 						if (channel.type === ChannelType.GuildText) {
 							const me = await channel.guild.members.fetchMe();
@@ -127,17 +126,12 @@ function createWsConnection(manager: ShardingManager | null, shard: number | nul
 								} else return;
 							}
 						} else if (channel.type === ChannelType.DM) {
-							if (!client.shard.ids.includes(0)) return; // only allow shard 0 to send DM
+							if (!client.shard?.ids.includes(0)) return; // only allow shard 0 to send DM
 						} else return console.log('no guildtext');
 					}
 
-					if (channel) {
-						const toSend = await parseCommandResponse(json);
-						await channel.send(toSend);
-					}
-				}
-
-				manager?.broadcastEval(sendMessage, { context: json }).catch((e) => {
+					if (channel) await channel.send(parseCommandResponse(json));
+				} catch (e) {
 					// TODO: tell api that message failed?
 					/*
 					if (redirectToChannelID) {
@@ -150,14 +144,14 @@ function createWsConnection(manager: ShardingManager | null, shard: number | nul
 					}
 					await channel.send({ embeds: [embed], files: [file] }).catch(() => null);
 				*/
-					const msg = e?.message ?? e;
+					const msg = e !== null && typeof e === 'object' && 'message' in e ? e.message : e;
 					if (msg !== 'Cannot send messages to this user' && msg !== 'Missing Access' && msg !== 'Missing Permissions' && msg !== 'Unknown Channel') {
 						console.log('---');
 						console.log(`An error happened when trying to send a message at ${new Date()}:`);
 						console.error(e);
 						console.log('---');
 					}
-				});
+				}
 			}
 		};
 	};
@@ -170,7 +164,7 @@ function createWsConnection(manager: ShardingManager | null, shard: number | nul
 		if (shard !== null) console.log(`[SHARD #${shard}] Disconnected from the Pokéhunt API, retrying in 5 secs`);
 		else console.log('Disconnected from the Pokéhunt API, retrying in 5 secs');
 
-		setTimeout(() => createWsConnection(manager, shard), 5000);
+		setTimeout(() => createWsConnection(client), 5000);
 	};
 }
 
@@ -186,13 +180,13 @@ function createWsConnection(manager: ShardingManager | null, shard: number | nul
  * @param guildName - The guild's name, or null
  */
 export async function userSendMessage(
-	userID: APIDiscordWSPayloadSend['userID'],
-	userName: APIDiscordWSPayloadSend['userName'],
-	channelID: APIDiscordWSPayloadSend['channelID'],
-	guildID: APIDiscordWSPayloadSend['guildID'] | null,
-	guildName: APIDiscordWSPayloadSend['guildName'] | null
+	userID: WSDiscordSend['userID'],
+	userName: WSDiscordSend['userName'],
+	channelID: WSDiscordSend['channelID'],
+	guildID: WSDiscordSend['guildID'] | null,
+	guildName: WSDiscordSend['guildName'] | null
 ): Promise<void> {
-	const toSend: APIDiscordWSPayloadSend = { platform: 'discord', event: 'send', userID, userName, channelID, guildID, guildName };
+	const toSend: WSDiscordSend = { platform: 'discord', event: 'send', userID, userName, channelID, guildID, guildName };
 
 	if (!ws || !ws.readyState) wsQueue.push(JSON.stringify(toSend));
 	else ws.send(JSON.stringify(toSend));
@@ -214,7 +208,7 @@ export async function userSendMessage(
  * ```
  */
 export async function guildChange(event: 'added' | 'removed', id: string, name: string, total: number): Promise<void> {
-	const toSend: APIDiscordWSPayloadGuilds = { platform: 'discord', event, id, name, total };
+	const toSend: WSDiscordGuilds = { platform: 'discord', event, id, name, total };
 
 	if (!ws || !ws.readyState) wsQueue.push(JSON.stringify(toSend));
 	else ws.send(JSON.stringify(toSend));
@@ -238,7 +232,7 @@ export async function runCommand(interaction: ChatInputCommandInteraction | Mess
 	}
 
 	const payloadID = randomUUID();
-	const data: APIDiscordWSPayloadCommand = {
+	const data: WSDiscordCommand = {
 		payloadID,
 		event: 'command',
 		command,
@@ -252,24 +246,14 @@ export async function runCommand(interaction: ChatInputCommandInteraction | Mess
 		args,
 	};
 
-	// const res = await fetch(`${API_URL}/client/command/${command}`, {
-	// 	method: 'POST',
-	// 	credentials: 'include',
-	// 	headers: { Authorization: `${API_KEY}`, 'Content-Type': 'application/json' },
-	// 	body: JSON.stringify(data),
-	// }).catch(() => {
-	// 	throw new APIError('The Pokéhunt API is offline');
-	// });
-
-	// return await handleCommandResponse(res);
-
 	return new Promise((resolve, reject) => {
 		const timeout = setTimeout(() => {
+			console.log(`Command: ${command} timed out after 30 seconds!`);
 			pendingReplies.delete(payloadID);
-			reject(new Error('WebSocket request timed out'));
+			reject(new CustomError('API did not reply within 30 seconds'));
 		}, 30_000); // adjust as needed
 
-		pendingReplies.set(payloadID, { resolve, timeout });
+		pendingReplies.set(payloadID, { resolve, reject, timeout });
 
 		if (!ws || !ws.readyState) wsQueue.push(JSON.stringify(data));
 		else {
@@ -290,7 +274,7 @@ export async function runCallbackCommand(interaction: ButtonInteraction | String
 	if (!member) member = interaction.user;
 
 	const payloadID = randomUUID();
-	const data: APIDiscordWSPayloadCallback = {
+	const data: WSDiscordCallback = {
 		payloadID,
 		event: 'callback',
 		callback: interaction.customId,
@@ -307,15 +291,13 @@ export async function runCallbackCommand(interaction: ButtonInteraction | String
 		data['values'] = interaction.values;
 	}
 
-	// return await handleCommandResponse(res);
-
 	return new Promise((resolve, reject) => {
 		const timeout = setTimeout(() => {
 			pendingReplies.delete(payloadID);
 			reject(new Error('WebSocket request timed out'));
 		}, 30_000); // adjust as needed
 
-		pendingReplies.set(payloadID, { resolve, timeout });
+		pendingReplies.set(payloadID, { resolve, reject, timeout });
 
 		if (!ws || !ws.readyState) wsQueue.push(JSON.stringify(data));
 		else ws.send(JSON.stringify(data));
@@ -323,35 +305,11 @@ export async function runCallbackCommand(interaction: ButtonInteraction | String
 }
 
 /**
- * Convert the raw API response into an object that can be send to Discord
- * @param res - The raw API response
- * @returns The object that can be send to Discord
- * @throws {@link APIError} if API is not reachable or invalid credentials
- * @throws {@link IgnoreError} if this message should not be send/should be ignored
- */
-export async function handleCommandResponse(res): Promise<CommandResponse> {
-	switch (res.status) {
-		case 200: {
-			const json: APICommandResponse = await res.json();
-			return await parseCommandResponse(json);
-		}
-		case 400:
-			throw new APIError('An invalid API request was made'); // Malformed request
-		case 401:
-			throw new APIError('An invalid API key is provided'); // Invalid API key
-		case 418:
-			throw new IgnoreError(); // Wrong user pressed button/menu
-		default:
-			throw new APIError(`The API server is not responding correctly (${res.status})`); // Other error codes than success (200)
-	}
-}
-
-/**
  * Convert the json API response body into an object that can be send to Discord
  * @param res - The json API response body
  * @returns The object that can be send to Discord
  */
-export async function parseCommandResponse(json: APICommandResponse | APIDiscordWSResponse): Promise<CommandResponse> {
+export function parseCommandResponse(json: APICommandResponse | WSDiscordResponse): CommandResponse {
 	const embeds: EmbedBuilder[] = [];
 	const files: AttachmentBuilder[] = [];
 	const components: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];

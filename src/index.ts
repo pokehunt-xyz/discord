@@ -1,6 +1,6 @@
 import { Shard, ShardingManager } from 'discord.js';
 
-import { createMainWs, guildChange, userSendMessage } from './utils/api';
+import { guildChange } from './utils/api';
 
 const token = process.env.DISCORD_BOT_TOKEN;
 if (!token) throw new Error('Missing environment variable DISCORD_BOT_TOKEN');
@@ -18,8 +18,6 @@ manager.on('shardCreate', async (shard: Shard) => {
 });
 
 manager.spawn().then((shards) => {
-	createMainWs(manager);
-
 	manager.fetchClientValues('guilds.cache').then((values) => {
 		const total = values.flat().length;
 		guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
@@ -28,20 +26,7 @@ manager.spawn().then((shards) => {
 	shards.forEach((shard) => {
 		shard.on('message', (message) => {
 			if (!message.function) return;
-			if (message.function === 'guildChange') {
-				if (!message.event || (message.event !== 'added' && message.event !== 'removed')) return;
-				if (!message.guildID || !message.guildName) return;
-
-				manager.fetchClientValues('guilds.cache').then((values) => {
-					const total = values.flat().length;
-					guildChange(message.event, message.guildID, message.guildName, total);
-				});
-			} else if (message.function === 'userSendMessage') {
-				const { userID, userName, channelID, guildID, guildName } = message;
-				if (!userID || !userName || !channelID || (guildID !== null && !guildID) || (guildName !== null && !guildName)) return;
-
-				userSendMessage(userID, userName, channelID, guildID, guildName);
-			} else console.log(`Shard ${shard.id} got message ${JSON.stringify(message)}`);
+			console.log(`Shard ${shard.id} got message ${JSON.stringify(message)}`);
 		});
 	});
 });

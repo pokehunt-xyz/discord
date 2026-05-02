@@ -40,7 +40,7 @@ async function load(): Promise<void> {
 	const eventFiles = await readdir(join(__dirname, './events'));
 	for (const file of eventFiles) {
 		const event = (await import(`./events/${file}`)).default;
-		client.on(event.name, (...args) => event.execute(...args));
+		client.on(event.name, (...args) => event.execute(...args, client));
 	}
 }
 load();

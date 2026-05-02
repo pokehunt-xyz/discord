@@ -45,7 +45,7 @@ export type APICommandResponse = {
 	content?: string;
 };
 
-export type APIDiscordWSResponse = Omit<APICommandResponse, 'callbackData'> &
+export type WSDiscordResponse = APICommandResponse &
 	(
 		| {
 				event: 'spawn' | 'levelup' | 'dm';
@@ -53,6 +53,7 @@ export type APIDiscordWSResponse = Omit<APICommandResponse, 'callbackData'> &
 		  }
 		| { event: 'reply'; payloadID: string }
 	);
+export type WSDiscordInvalidResponse = { event: 'reply'; status: number; payloadID: string };
 
 export type APIDiscordPayload = {
 	platform: 'discord';
@@ -66,7 +67,7 @@ export type APIDiscordPayload = {
 	args?: unknown;
 };
 
-export type APIDiscordWSPayloadSend = {
+export type WSDiscordSend = {
 	platform: 'discord';
 	event: 'send';
 	userID: string;
@@ -76,7 +77,7 @@ export type APIDiscordWSPayloadSend = {
 	guildName: string | null;
 };
 
-export type APIDiscordWSPayloadGuilds = {
+export type WSDiscordGuilds = {
 	platform: 'discord';
 	event: 'added' | 'removed';
 	id: string;
@@ -84,8 +85,9 @@ export type APIDiscordWSPayloadGuilds = {
 	total: number;
 };
 
-export type APIDiscordWSPayloadCommand = APIDiscordPayload & { event: 'command'; command: string; payloadID: string };
-export type APIDiscordWSPayloadCallback = APIDiscordPayload & { event: 'callback'; callback: string; payloadID: string };
+export type WSDiscordCommand = APIDiscordPayload & { event: 'command'; command: string; payloadID: string };
+export type WSDiscordCallback = APIDiscordPayload & { event: 'callback'; callback: string; payloadID: string };
+export type WSDiscordPayload = WSDiscordSend | WSDiscordGuilds | WSDiscordCommand | WSDiscordCallback;
 
 export type CommandResponse = {
 	embeds: EmbedBuilder[];

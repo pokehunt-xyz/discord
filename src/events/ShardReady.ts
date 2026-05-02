@@ -1,5 +1,4 @@
 import { Events } from 'discord.js';
-import { createShardWs } from '../utils/api';
 
 export default {
 	name: Events.ShardReady,
@@ -7,6 +6,5 @@ export default {
 
 	async execute(id: number): Promise<void> {
 		console.log(`[SHARD #${id}] ready`);
-		createShardWs(id);
 	},
 };
