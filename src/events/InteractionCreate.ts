@@ -28,17 +28,27 @@ export default {
 		try {
 			if (interaction instanceof ChatInputCommandInteraction) {
 				const command = interaction.client.commands.get(interaction.commandName);
-				if (interaction.commandName === 'donate') await interaction.deferReply({ ephemeral: true });
-				else await interaction.deferReply();
 
-				if (!command) interaction.editReply({ content: 'That command does not exists!' });
-				else {
-					const cmdRes = await command.execute(interaction, now);
-					await interaction.editReply(cmdRes);
-				}
+				// Start deferring, but DON'T await it yet
+				const deferPromise = interaction.commandName === 'donate' ? interaction.deferReply({ ephemeral: true }) : interaction.deferReply();
+
+				// Start command execution immediately
+				const cmdPromise = command ? command.execute(interaction, now) : Promise.resolve({ content: 'That command does not exists!' });
+
+				// Wait for BOTH to finish before editing
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const [_, cmdRes] = await Promise.all([deferPromise, cmdPromise]);
+				await interaction.editReply(cmdRes);
 			} else {
-				await interaction.deferUpdate();
-				const cmdRes = await runCallbackCommand(interaction, now);
+				// Start deferring, but DON'T await it yet
+				const deferPromise = interaction.deferUpdate();
+
+				// Start callback execution immediately
+				const cmdPromise = runCallbackCommand(interaction, now);
+
+				// Wait for BOTH to finish before editing
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const [_, cmdRes] = await Promise.all([deferPromise, cmdPromise]);
 				await interaction.editReply(cmdRes);
 			}
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
