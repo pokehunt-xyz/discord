@@ -45,15 +45,14 @@ export type APICommandResponse = {
 	content?: string;
 };
 
-export type APIDiscordWSResponse = {
-	event: 'spawn' | 'levelup' | 'dm';
-	channelID: string;
-	embeds: APICommandResponse['embeds'];
-	files: APICommandResponse['files'];
-	buttons: APICommandResponse['buttons'];
-	menus: APICommandResponse['menus'];
-	content?: APICommandResponse['content'];
-};
+export type APIDiscordWSResponse = Omit<APICommandResponse, 'callbackData'> &
+	(
+		| {
+				event: 'spawn' | 'levelup' | 'dm';
+				channelID: string;
+		  }
+		| { event: 'reply'; payloadID: string }
+	);
 
 export type APIDiscordPayload = {
 	platform: 'discord';
@@ -84,6 +83,9 @@ export type APIDiscordWSPayloadGuilds = {
 	name: string;
 	total: number;
 };
+
+export type APIDiscordWSPayloadCommand = APIDiscordPayload & { event: 'command'; command: string; payloadID: string };
+export type APIDiscordWSPayloadCallback = APIDiscordPayload & { event: 'callback'; callback: string; payloadID: string };
 
 export type CommandResponse = {
 	embeds: EmbedBuilder[];

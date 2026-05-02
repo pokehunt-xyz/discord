@@ -17,7 +17,16 @@ import {
 import WebSocket from 'ws';
 
 import { APIError, IgnoreError } from './error';
-import { APICommandResponse, APIDiscordPayload, APIDiscordWSPayloadGuilds, APIDiscordWSPayloadSend, APIDiscordWSResponse, CommandResponse } from './types';
+import {
+	APICommandResponse,
+	APIDiscordWSPayloadCallback,
+	APIDiscordWSPayloadCommand,
+	APIDiscordWSPayloadGuilds,
+	APIDiscordWSPayloadSend,
+	APIDiscordWSResponse,
+	CommandResponse,
+} from './types';
+import { randomUUID } from 'node:crypto';
 
 const API_URL = process.env.API_URL ?? 'https://api.pokehunt.xyz';
 const API_KEY = process.env.API_KEY;
@@ -28,6 +37,16 @@ if (!API_WS_KEY) throw new Error('No pokehunt API WS key specified!');
 let ws: WebSocket | null = null;
 let wsQueue: string[] = [];
 
+const pendingReplies = new Map<string, { resolve: (v: CommandResponse) => void; timeout: NodeJS.Timeout }>();
+
+export function createMainWs(manager: ShardingManager): void {
+	createWsConnection(manager, null);
+}
+
+export function createShardWs(shard: number): void {
+	createWsConnection(null, shard);
+}
+
 /**
  * This method will create a websocket connection to the Pokéhunt API
  *
@@ -37,14 +56,17 @@ let wsQueue: string[] = [];
  *
  * @param manager - The Discord.js sharing manager
  */
-export function createWsConnection(manager: ShardingManager): void {
-	const tempWs = new WebSocket(API_URL.replace('http', 'ws') + '/client', ['Authorization', 'discord', API_WS_KEY as string]); // https -> wss, http -> ws
+function createWsConnection(manager: ShardingManager | null, shard: number | null): void {
+	const auth = ['Authorization', 'discord', API_WS_KEY as string, shard === null ? 'null' : shard.toString()];
+	const tempWs = new WebSocket(API_URL.replace('http', 'ws') + '/client', auth); // https -> wss, http -> ws
 	ws = tempWs;
 
 	// Authenticate with the Pokéhunt API
 	tempWs.onopen = (): void => {
-		console.log('Connected to the Pokéhunt API');
-		tempWs.send(JSON.stringify({ platform: 'discord' }));
+		if (shard !== null) console.log(`[SHARD #${shard}] Connected to the Pokéhunt API`);
+		else console.log('Connected to the Pokéhunt API');
+
+		// tempWs.send(JSON.stringify({ platform: 'discord', shard }));
 
 		// Empty the queue
 		for (const msg of wsQueue) {
@@ -55,59 +77,69 @@ export function createWsConnection(manager: ShardingManager): void {
 		tempWs.onmessage = async (data): Promise<void> => {
 			const json: APIDiscordWSResponse = JSON.parse(data.data.toString());
 
-			async function sendMessage(client, json): Promise<void> {
-				// eslint-disable-next-line @typescript-eslint/no-require-imports
-				const { ChannelType, PermissionFlagsBits } = require('discord.js');
-				// eslint-disable-next-line @typescript-eslint/no-require-imports
-				const { parseCommandResponse } = require('../../../../dist/utils/api.js'); // weird path as we are in node_modules/discord.js/src/client
+			if (json.event === 'reply' && pendingReplies.has(json.payloadID)) {
+				const { resolve, timeout } = pendingReplies.get(json.payloadID)!;
+				clearTimeout(timeout);
+				pendingReplies.delete(json.payloadID);
 
-				let channel;
-				if (json.event === 'dm') {
-					if (!client.shard.ids.includes(0)) return; // only allow shard 0 to send DM
-					channel = await client.users.fetch(json.channelID);
-					if (!channel) return;
-				} else if (json.event === 'levelup' || json.event === 'spawn') {
-					channel = await client.channels.fetch(json.channelID);
-					if (!channel) return;
+				// TODO-ws: no status codes anymore, so what if invalid API key etc (see handleCommandResponse)
+				resolve(await parseCommandResponse(json));
 
-					if (channel.type === ChannelType.GuildText) {
-						const me = await channel.guild.members.fetchMe();
-						if (!channel.permissionsFor(me).has(PermissionFlagsBits.SendMessages)) return;
+				return;
+			} else {
+				async function sendMessage(client, json): Promise<void> {
+					// eslint-disable-next-line @typescript-eslint/no-require-imports
+					const { ChannelType, PermissionFlagsBits } = require('discord.js');
+					// eslint-disable-next-line @typescript-eslint/no-require-imports
+					const { parseCommandResponse } = require('../../../../dist/utils/api.js'); // weird path as we are in node_modules/discord.js/src/client
 
-						if (!channel.permissionsFor(me).has(PermissionFlagsBits.AttachFiles)) {
-							if (json.event === 'spawn')
-								return channel.send(
-									'I tried to spawn a Pokémon, however, I do not have permission to attach files, please contact a staff member to give it to me.'
-								);
-							else if (json.event === 'levelup') json.files = [];
-							else return;
-						}
-
-						if (!channel.permissionsFor(me).has(PermissionFlagsBits.EmbedLinks)) {
-							if (json.event === 'spawn')
-								return channel.send(
-									'I tried to spawn a Pokémon, however, I do not have permission to send embeds, please contact a staff member to give it to me.'
-								);
-							else if (json.event === 'levelup') {
-								json.content = json.embeds[0].description;
-								json.files = [];
-								json.embeds = [];
-							} else return;
-						}
-					} else if (channel.type === ChannelType.DM) {
+					let channel;
+					if (json.event === 'dm') {
 						if (!client.shard.ids.includes(0)) return; // only allow shard 0 to send DM
-					} else return console.log('no guildtext');
+						channel = await client.users.fetch(json.channelID);
+						if (!channel) return;
+					} else if (json.event === 'levelup' || json.event === 'spawn') {
+						channel = await client.channels.fetch(json.channelID);
+						if (!channel) return;
+
+						if (channel.type === ChannelType.GuildText) {
+							const me = await channel.guild.members.fetchMe();
+							if (!channel.permissionsFor(me).has(PermissionFlagsBits.SendMessages)) return;
+
+							if (!channel.permissionsFor(me).has(PermissionFlagsBits.AttachFiles)) {
+								if (json.event === 'spawn')
+									return channel.send(
+										'I tried to spawn a Pokémon, however, I do not have permission to attach files, please contact a staff member to give it to me.'
+									);
+								else if (json.event === 'levelup') json.files = [];
+								else return;
+							}
+
+							if (!channel.permissionsFor(me).has(PermissionFlagsBits.EmbedLinks)) {
+								if (json.event === 'spawn')
+									return channel.send(
+										'I tried to spawn a Pokémon, however, I do not have permission to send embeds, please contact a staff member to give it to me.'
+									);
+								else if (json.event === 'levelup') {
+									json.content = json.embeds[0].description;
+									json.files = [];
+									json.embeds = [];
+								} else return;
+							}
+						} else if (channel.type === ChannelType.DM) {
+							if (!client.shard.ids.includes(0)) return; // only allow shard 0 to send DM
+						} else return console.log('no guildtext');
+					}
+
+					if (channel) {
+						const toSend = await parseCommandResponse(json);
+						await channel.send(toSend);
+					}
 				}
 
-				if (channel) {
-					const toSend = await parseCommandResponse(json);
-					await channel.send(toSend);
-				}
-			}
-
-			manager.broadcastEval(sendMessage, { context: json }).catch((e) => {
-				// TODO: tell api that message failed?
-				/*
+				manager?.broadcastEval(sendMessage, { context: json }).catch((e) => {
+					// TODO: tell api that message failed?
+					/*
 					if (redirectToChannelID) {
 						try {
 							const redirectChannel = await message.guild.channels.fetch(redirectToChannelID);
@@ -118,14 +150,15 @@ export function createWsConnection(manager: ShardingManager): void {
 					}
 					await channel.send({ embeds: [embed], files: [file] }).catch(() => null);
 				*/
-				const msg = e?.message ?? e;
-				if (msg !== 'Cannot send messages to this user' && msg !== 'Missing Access' && msg !== 'Missing Permissions' && msg !== 'Unknown Channel') {
-					console.log('---');
-					console.log(`An error happened when trying to send a message at ${new Date()}:`);
-					console.error(e);
-					console.log('---');
-				}
-			});
+					const msg = e?.message ?? e;
+					if (msg !== 'Cannot send messages to this user' && msg !== 'Missing Access' && msg !== 'Missing Permissions' && msg !== 'Unknown Channel') {
+						console.log('---');
+						console.log(`An error happened when trying to send a message at ${new Date()}:`);
+						console.error(e);
+						console.log('---');
+					}
+				});
+			}
 		};
 	};
 	tempWs.onerror = (): void => {
@@ -133,8 +166,11 @@ export function createWsConnection(manager: ShardingManager): void {
 	};
 	tempWs.onclose = (): void => {
 		ws = null;
-		console.log('Disconnected from the Pokéhunt API, retrying in 5 secs');
-		setTimeout(() => createWsConnection(manager), 5000);
+
+		if (shard !== null) console.log(`[SHARD #${shard}] Disconnected from the Pokéhunt API, retrying in 5 secs`);
+		else console.log('Disconnected from the Pokéhunt API, retrying in 5 secs');
+
+		setTimeout(() => createWsConnection(manager, shard), 5000);
 	};
 }
 
@@ -201,7 +237,11 @@ export async function runCommand(interaction: ChatInputCommandInteraction | Mess
 		else if (interaction instanceof Message) member = interaction.author;
 	}
 
-	const data: APIDiscordPayload = {
+	const payloadID = randomUUID();
+	const data: APIDiscordWSPayloadCommand = {
+		payloadID,
+		event: 'command',
+		command,
 		platform: 'discord',
 		userID: member.id,
 		userName: member.displayName,
@@ -212,16 +252,30 @@ export async function runCommand(interaction: ChatInputCommandInteraction | Mess
 		args,
 	};
 
-	const res = await fetch(`${API_URL}/client/command/${command}`, {
-		method: 'POST',
-		credentials: 'include',
-		headers: { Authorization: `${API_KEY}`, 'Content-Type': 'application/json' },
-		body: JSON.stringify(data),
-	}).catch(() => {
-		throw new APIError('The Pokéhunt API is offline');
-	});
+	// const res = await fetch(`${API_URL}/client/command/${command}`, {
+	// 	method: 'POST',
+	// 	credentials: 'include',
+	// 	headers: { Authorization: `${API_KEY}`, 'Content-Type': 'application/json' },
+	// 	body: JSON.stringify(data),
+	// }).catch(() => {
+	// 	throw new APIError('The Pokéhunt API is offline');
+	// });
 
-	return await handleCommandResponse(res);
+	// return await handleCommandResponse(res);
+
+	return new Promise((resolve, reject) => {
+		const timeout = setTimeout(() => {
+			pendingReplies.delete(payloadID);
+			reject(new Error('WebSocket request timed out'));
+		}, 30_000); // adjust as needed
+
+		pendingReplies.set(payloadID, { resolve, timeout });
+
+		if (!ws || !ws.readyState) wsQueue.push(JSON.stringify(data));
+		else {
+			ws.send(JSON.stringify(data));
+		}
+	});
 }
 
 /**
@@ -235,7 +289,11 @@ export async function runCallbackCommand(interaction: ButtonInteraction | String
 	let member: GuildMember | User = interaction.member as GuildMember;
 	if (!member) member = interaction.user;
 
-	const data: APIDiscordPayload = {
+	const payloadID = randomUUID();
+	const data: APIDiscordWSPayloadCallback = {
+		payloadID,
+		event: 'callback',
+		callback: interaction.customId,
 		platform: 'discord',
 		userID: member.id,
 		userName: member.displayName,
@@ -249,16 +307,19 @@ export async function runCallbackCommand(interaction: ButtonInteraction | String
 		data['values'] = interaction.values;
 	}
 
-	const res = await fetch(`${API_URL}/client/callbackCommand/${interaction.customId}`, {
-		method: 'POST',
-		credentials: 'include',
-		headers: { Authorization: `${API_KEY}`, 'Content-Type': 'application/json' },
-		body: JSON.stringify(data),
-	}).catch(() => {
-		throw new APIError('The Pokéhunt API is offline');
-	});
+	// return await handleCommandResponse(res);
 
-	return await handleCommandResponse(res);
+	return new Promise((resolve, reject) => {
+		const timeout = setTimeout(() => {
+			pendingReplies.delete(payloadID);
+			reject(new Error('WebSocket request timed out'));
+		}, 30_000); // adjust as needed
+
+		pendingReplies.set(payloadID, { resolve, timeout });
+
+		if (!ws || !ws.readyState) wsQueue.push(JSON.stringify(data));
+		else ws.send(JSON.stringify(data));
+	});
 }
 
 /**

@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, Client, Collection, GatewayIntentBits, Partials, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, Client, Collection, Events, GatewayIntentBits, Partials, SlashCommandBuilder } from 'discord.js';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { CommandResponse } from './utils/types';
@@ -45,7 +45,7 @@ async function load(): Promise<void> {
 }
 load();
 
-client.on('ready', async () => {
+client.on(Events.ClientReady, async () => {
 	try {
 		if (process.env.RESET_SLASH_COMMANDS === 'true') await client.application?.commands.set([]);
 		await client.application?.commands.set(commands);

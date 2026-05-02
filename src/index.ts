@@ -1,6 +1,6 @@
 import { Shard, ShardingManager } from 'discord.js';
 
-import { createWsConnection, guildChange, userSendMessage } from './utils/api';
+import { createMainWs, guildChange, userSendMessage } from './utils/api';
 
 const token = process.env.DISCORD_BOT_TOKEN;
 if (!token) throw new Error('Missing environment variable DISCORD_BOT_TOKEN');
@@ -18,7 +18,8 @@ manager.on('shardCreate', async (shard: Shard) => {
 });
 
 manager.spawn().then((shards) => {
-	createWsConnection(manager);
+	createMainWs(manager);
+
 	manager.fetchClientValues('guilds.cache').then((values) => {
 		const total = values.flat().length;
 		guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
