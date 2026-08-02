@@ -53,7 +53,7 @@ export type WSDiscordResponse = APICommandResponse &
 		  }
 		| { event: 'reply'; payloadID: string }
 	);
-export type WSDiscordInvalidResponse = { event: 'reply'; status: number; payloadID: string };
+export type WSInvalidResponse = { event: 'reply'; status: number; payloadID: string };
 
 export type APIDiscordPayload = {
 	platform: 'discord';

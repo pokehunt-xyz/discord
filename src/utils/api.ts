@@ -22,13 +22,13 @@ import WebSocket from 'ws';
 import { APIError, CustomError } from './error';
 import {
 	APICommandResponse,
-	WSDiscordResponse,
 	CommandResponse,
 	WSDiscordSend,
 	WSDiscordGuilds,
 	WSDiscordCallback,
 	WSDiscordCommand,
-	WSDiscordInvalidResponse,
+	WSInvalidResponse,
+	WSDiscordResponse,
 } from './types';
 
 const API_URL = process.env.API_URL ?? 'https://api.pokehunt.xyz';
@@ -69,7 +69,7 @@ export function createWsConnection(client: Client): void {
 		wsQueue = [];
 
 		tempWs.onmessage = async (data): Promise<void> => {
-			const json: WSDiscordResponse | WSDiscordInvalidResponse = JSON.parse(data.data.toString());
+			const json: WSDiscordResponse | WSInvalidResponse = JSON.parse(data.data.toString());
 
 			if (json.event === 'reply') {
 				if (!pendingReplies.has(json.payloadID)) return;
@@ -250,7 +250,7 @@ export async function runCommand(interaction: ChatInputCommandInteraction | Mess
 		const timeout = setTimeout(() => {
 			console.log(`Command: ${command} timed out after 30 seconds!`);
 			pendingReplies.delete(payloadID);
-			reject(new CustomError('API did not reply within 30 seconds'));
+			reject(new CustomError('The PokéHunt API did not reply within 30 seconds, please try again'));
 		}, 30_000); // adjust as needed
 
 		pendingReplies.set(payloadID, { resolve, reject, timeout });
@@ -293,8 +293,9 @@ export async function runCallbackCommand(interaction: ButtonInteraction | String
 
 	return new Promise((resolve, reject) => {
 		const timeout = setTimeout(() => {
+			console.log('Callback timed out after 30 seconds!');
 			pendingReplies.delete(payloadID);
-			reject(new Error('WebSocket request timed out'));
+			reject(new CustomError('The PokéHunt API did not reply within 30 seconds, please try again'));
 		}, 30_000); // adjust as needed
 
 		pendingReplies.set(payloadID, { resolve, reject, timeout });

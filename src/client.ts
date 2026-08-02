@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, Client, Collection, Events, GatewayIntentBits, Partials, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, Client, Collection, Events, GatewayIntentBits, Options, Partials, SlashCommandBuilder } from 'discord.js';
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { CommandResponse } from './utils/types';
@@ -18,6 +18,12 @@ declare module 'discord.js' {
 const client = new Client({
 	partials: [Partials.Channel],
 	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages],
+	makeCache: Options.cacheWithLimits({
+		...Options.DefaultMakeCacheSettings,
+		DMMessageManager: 0,
+		MessageManager: 0,
+		GuildMessageManager: 0,
+	}),
 });
 const commands: SlashCommandBuilder[] = [];
 
