@@ -1,6 +1,7 @@
 import { Shard, ShardingManager } from 'discord.js';
 
 import { guildChange } from './utils/api';
+import { uptime_kuma_ping } from './utils/kuma';
 
 const token = process.env.DISCORD_BOT_TOKEN;
 if (!token) throw new Error('Missing environment variable DISCORD_BOT_TOKEN');
@@ -22,6 +23,8 @@ manager.spawn().then((shards) => {
 		const total = values.flat().length;
 		guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
 	});
+
+	uptime_kuma_ping();
 
 	shards.forEach((shard) => {
 		shard.on('message', (message) => {
