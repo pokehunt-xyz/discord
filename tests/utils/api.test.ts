@@ -1,3 +1,4 @@
+import { describe, it, expect } from '@jest/globals';
 import { AttachmentBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, StringSelectMenuBuilder } from 'discord.js';
 import { parseCommandResponse } from '../../src/utils/api';
 
