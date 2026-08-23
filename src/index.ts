@@ -18,7 +18,24 @@ manager.on('shardCreate', async (shard: Shard) => {
 	console.log(`[SHARD #${shard.id}] create`);
 });
 
-manager.spawn().then((shards) => {
+function waitForShardReady(shard: Shard): Promise<void> {
+	return new Promise((resolve) => {
+		if (shard.ready) {
+			resolve();
+			return;
+		}
+
+		shard.once('ready', resolve);
+	});
+}
+
+async function start(): Promise<void> {
+	const shards = await manager.spawn();
+	console.log('Shards spawned');
+
+	await Promise.all(shards.map(waitForShardReady));
+	console.log('All shards ready');
+
 	uptime_kuma_ping();
 
 	shards.forEach((shard) => {
@@ -28,14 +45,11 @@ manager.spawn().then((shards) => {
 		});
 	});
 
-	// Wait for 5 minutes for all shards to be ready, then fetch the total guild count and send it to the API
-	setTimeout(
-		() => {
-			manager.fetchClientValues('guilds.cache').then((values) => {
-				const total = values.flat().length;
-				guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
-			});
-		},
-		5 * 60 * 1000
-	);
-});
+	console.log('FETCH CLIENT VALUES');
+	manager.fetchClientValues('guilds.cache').then((values) => {
+		const total = values.flat().length;
+		guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
+	});
+}
+
+start();
