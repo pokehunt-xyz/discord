@@ -46,10 +46,9 @@ async function start(): Promise<void> {
 	});
 
 	console.log('FETCH CLIENT VALUES');
-	manager.fetchClientValues('guilds.cache').then((values) => {
-		const total = values.flat().length;
-		guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
-	});
+	const values = await manager.fetchClientValues('guilds.cache');
+	const total = values.flat().length;
+	await guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
 }
 
 start();

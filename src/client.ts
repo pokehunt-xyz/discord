@@ -53,11 +53,31 @@ load();
 
 client.on(Events.ClientReady, async () => {
 	try {
+		console.log(`[SHARD ${client.shard?.ids.join(',')}] ClientReady`);
+
 		if (process.env.RESET_SLASH_COMMANDS === 'true') await client.application?.commands.set([]);
 		await client.application?.commands.set(commands);
+
+		console.log(`[SHARD ${client.shard?.ids.join(',')}] Slash commands registered`);
 	} catch (e) {
 		console.error(e);
 	}
+});
+
+process.on('uncaughtException', (error) => {
+	console.error('[UNCAUGHT EXCEPTION]', error);
+});
+
+process.on('unhandledRejection', (reason) => {
+	console.error('[UNHANDLED REJECTION]', reason);
+});
+
+client.on('error', (error) => {
+	console.error('[CLIENT ERROR]', error);
+});
+
+client.on('shardError', (error) => {
+	console.error('[SHARD ERROR]', error);
 });
 
 client.login(process.env.DISCORD_BOT_TOKEN);
