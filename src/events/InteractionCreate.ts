@@ -9,8 +9,9 @@ import {
 	StringSelectMenuInteraction,
 } from 'discord.js';
 
-import { APIError, CustomError, IgnoreError, InvalidOptionError, OnlyInGuildError } from '../utils/error';
 import { runCallbackCommand } from '../utils/api';
+import { APIError, CustomError, IgnoreError, InvalidOptionError, OnlyInGuildError } from '../utils/error';
+import { CommandResponse } from '../utils/types';
 
 export default {
 	name: Events.InteractionCreate,
@@ -26,33 +27,49 @@ export default {
 		if (interaction.user.bot) return; // User is a bot
 
 		try {
-			if (interaction instanceof ChatInputCommandInteraction) {
+			const isChatCommand = interaction instanceof ChatInputCommandInteraction;
+			let deferPromise: Promise<unknown>;
+			let cmdPromise: Promise<CommandResponse> | Promise<{ content: string }>;
+
+			if (isChatCommand) {
 				const command = interaction.client.commands.get(interaction.commandName);
 
 				// Start deferring, but DON'T await it yet
-				const deferPromise = interaction.commandName === 'donate' ? interaction.deferReply({ ephemeral: true }) : interaction.deferReply();
+				deferPromise = interaction.commandName === 'donate' ? interaction.deferReply({ ephemeral: true }) : interaction.deferReply();
 
 				// Start command execution immediately
-				const cmdPromise = command ? command.execute(interaction, now) : Promise.resolve({ content: 'That command does not exists!' });
-
-				// Wait for BOTH to finish before editing
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [_, cmdResult] = await Promise.allSettled([deferPromise, cmdPromise]);
-				if (cmdResult.status === 'fulfilled') await interaction.editReply(cmdResult.value);
-				else throw cmdResult.reason;
+				cmdPromise = command ? command.execute(interaction, now) : Promise.resolve({ content: 'That command does not exists!' });
 			} else {
 				// Start deferring, but DON'T await it yet
-				const deferPromise = interaction.deferUpdate();
+				deferPromise = interaction.deferUpdate();
 
 				// Start callback execution immediately
-				const cmdPromise = runCallbackCommand(interaction, now);
-
-				// Wait for BOTH to finish before editing
-				// eslint-disable-next-line @typescript-eslint/no-unused-vars
-				const [_, cmdResult] = await Promise.allSettled([deferPromise, cmdPromise]);
-				if (cmdResult.status === 'fulfilled') await interaction.editReply(cmdResult.value);
-				else throw cmdResult.reason;
+				cmdPromise = runCallbackCommand(interaction, now);
 			}
+
+			// Wait for BOTH to finish before editing
+			const [deferResult, cmdResult] = await Promise.allSettled([deferPromise, cmdPromise]);
+
+			if (deferResult.status === 'rejected') {
+				console.log('\n\nDEFER REJECTED!!');
+
+				// If the command was fulfilled, try to reply anyway
+				if (cmdResult.status === 'fulfilled') {
+					try {
+						await interaction.reply(cmdResult.value);
+					} catch (e) {
+						console.log('\nAFTER DEFER REJECTED, REPLY FAILED:');
+						console.error(e);
+						console.log('===');
+					}
+				}
+
+				console.error(deferResult.reason);
+				return;
+			}
+
+			if (cmdResult.status === 'fulfilled') await interaction.editReply(cmdResult.value);
+			else throw cmdResult.reason;
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		} catch (error: any) {
 			try {
@@ -84,7 +101,7 @@ export default {
  * @param error - The error message/code
  */
 async function UNKNOWN_ERROR(interaction: ButtonInteraction | ChatInputCommandInteraction | StringSelectMenuInteraction, error: Error): Promise<void> {
-	if (!interaction.deferred) await interaction.deferReply();
+	if (!interaction.deferred && !interaction.replied) await interaction.deferReply();
 
 	const embed = new EmbedBuilder();
 	embed.setTitle('❌ Error!');
@@ -104,7 +121,7 @@ async function UNKNOWN_ERROR(interaction: ButtonInteraction | ChatInputCommandIn
  * @param error - The error to show, leave empty for general error message
  */
 async function CUSTOM(interaction: ButtonInteraction | ChatInputCommandInteraction | StringSelectMenuInteraction, error?: string): Promise<void> {
-	if (!interaction.deferred) await interaction.deferReply();
+	if (!interaction.deferred && !interaction.replied) await interaction.deferReply();
 
 	if (!error) error = 'Something went wrong, please try again!';
 

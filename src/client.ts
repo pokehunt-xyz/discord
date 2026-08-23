@@ -5,7 +5,7 @@ import { CommandResponse } from './utils/types';
 
 type CommandData = {
 	data: SlashCommandBuilder;
-	execute: (interaction: ChatInputCommandInteraction, now: number) => CommandResponse;
+	execute: (interaction: ChatInputCommandInteraction, now: number) => Promise<CommandResponse>;
 };
 
 declare module 'discord.js' {
