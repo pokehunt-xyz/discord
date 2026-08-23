@@ -19,11 +19,6 @@ manager.on('shardCreate', async (shard: Shard) => {
 });
 
 manager.spawn().then((shards) => {
-	manager.fetchClientValues('guilds.cache').then((values) => {
-		const total = values.flat().length;
-		guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
-	});
-
 	uptime_kuma_ping();
 
 	shards.forEach((shard) => {
@@ -32,4 +27,12 @@ manager.spawn().then((shards) => {
 			console.log(`Shard ${shard.id} got message ${JSON.stringify(message)}`);
 		});
 	});
+
+	// Wait for 5 minutes for all shards to be ready, then fetch the total guild count and send it to the API
+	setTimeout(() => {
+		manager.fetchClientValues('guilds.cache').then((values) => {
+			const total = values.flat().length;
+			guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
+		});
+	}, 5_000);
 });
