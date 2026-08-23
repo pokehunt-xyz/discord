@@ -29,10 +29,13 @@ manager.spawn().then((shards) => {
 	});
 
 	// Wait for 5 minutes for all shards to be ready, then fetch the total guild count and send it to the API
-	setTimeout(() => {
-		manager.fetchClientValues('guilds.cache').then((values) => {
-			const total = values.flat().length;
-			guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
-		});
-	}, 5_000);
+	setTimeout(
+		() => {
+			manager.fetchClientValues('guilds.cache').then((values) => {
+				const total = values.flat().length;
+				guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);
+			});
+		},
+		5 * 60 * 1000
+	);
 });
