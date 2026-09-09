@@ -84,6 +84,9 @@ export function createWsConnection(client: Client): void {
 							return reject(new APIError('An invalid API request was made')); // Malformed request
 						case 401:
 							return reject(new APIError('An invalid API key is provided')); // Invalid API key
+						case 418:
+							// The wrong user pressed the button, so we can just ignore it
+							return;
 						default:
 							return reject(new APIError(`The API server is not responding correctly (${json.status})`)); // Other error codes than success (200)
 					}

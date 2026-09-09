@@ -31,8 +31,6 @@ function waitForShardReady(shard: Shard): Promise<void> {
 
 async function start(): Promise<void> {
 	const shards = await manager.spawn();
-	console.log('Shards spawned');
-
 	await Promise.all(shards.map(waitForShardReady));
 	console.log('All shards ready');
 
@@ -45,7 +43,6 @@ async function start(): Promise<void> {
 		});
 	});
 
-	console.log('FETCH CLIENT VALUES');
 	const values = await manager.fetchClientValues('guilds.cache');
 	const total = values.flat().length;
 	await guildChange('added', '735436966300090419', 'FORCE SYNC OF COUNT TO MAKE SURE BOTINFO IS CORRECT', total);

@@ -53,12 +53,9 @@ load();
 
 client.on(Events.ClientReady, async () => {
 	try {
-		console.log(`[SHARD ${client.shard?.ids.join(',')}] ClientReady`);
-
 		if (process.env.RESET_SLASH_COMMANDS === 'true') await client.application?.commands.set([]);
 		await client.application?.commands.set(commands);
-
-		console.log(`[SHARD ${client.shard?.ids.join(',')}] Slash commands registered`);
+		console.log(`[SHARD #${client.shard?.ids.join(',')}] Slash commands registered`);
 	} catch (e) {
 		console.error(e);
 	}
