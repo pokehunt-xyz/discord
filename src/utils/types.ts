@@ -5,6 +5,11 @@ export type APIAttachment = {
 	name: string | undefined;
 };
 
+export type APIAttachmentUrl = {
+	url: string;
+	name: string | undefined;
+};
+
 export type APIEmbed = {
 	title?: string;
 	fields?: { name: string; value: string; inline?: boolean }[];
@@ -39,7 +44,7 @@ export type APISelect = {
 
 export type APICommandResponse = {
 	embeds: APIEmbed[];
-	files: APIAttachment[];
+	files: (APIAttachment | APIAttachmentUrl)[];
 	buttons: APIButton[][];
 	menus: APISelectMenu[];
 	content?: string;

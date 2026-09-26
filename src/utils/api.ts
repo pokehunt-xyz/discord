@@ -354,9 +354,16 @@ export function parseCommandResponse(json: APICommandResponse | WSDiscordRespons
 		if (hasContent) embeds.push(embed);
 	}
 
-	for (const { content, name } of json.files) {
-		const file = new AttachmentBuilder(Buffer.from(content), { name });
-		files.push(file);
+	for (const file of json.files) {
+		if ('url' in file) {
+			const attachment = new AttachmentBuilder(file.url, { name: file.name });
+			files.push(attachment);
+		} else if ('content' in file) {
+			const attachment = new AttachmentBuilder(Buffer.from(file.content), { name: file.name });
+			files.push(attachment);
+		} else {
+			console.log(`Invalid file object received from API: ${JSON.stringify(file)}`);
+		}
 	}
 
 	// If we have too many rows or too many buttons in one row, just force everything in max rows
