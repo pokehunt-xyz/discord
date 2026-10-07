@@ -356,7 +356,8 @@ export function parseCommandResponse(json: APICommandResponse | WSDiscordRespons
 
 	for (const file of json.files) {
 		if ('url' in file) {
-			const attachment = new AttachmentBuilder(file.url, { name: file.name });
+			console.log(`SHOULD NOT RECEIVE FILE URL: ${file.url}`);
+			const attachment = new AttachmentBuilder(file.url as string, { name: file.name });
 			files.push(attachment);
 		} else if ('content' in file) {
 			const attachment = new AttachmentBuilder(Buffer.from(file.content), { name: file.name });
