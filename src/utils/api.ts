@@ -367,6 +367,9 @@ export function parseCommandResponse(json: APICommandResponse | WSDiscordRespons
 		}
 	}
 
+	// Remove empty button rows
+	json.buttons = json.buttons.filter((buttonRow) => buttonRow.length > 0);
+
 	// If we have too many rows or too many buttons in one row, just force everything in max rows
 	if (json.buttons.length > 5 || json.buttons.some((buttonRow) => buttonRow.length > 5)) {
 		let buttons: ButtonBuilder[] = [];
