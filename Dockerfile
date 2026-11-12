@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM node:lts-alpine AS base
 
 # Required for zlib-sync
 RUN apk add --no-cache build-base python3
