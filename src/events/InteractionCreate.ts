@@ -2,10 +2,12 @@ import {
 	BaseInteraction,
 	ButtonInteraction,
 	ChatInputCommandInteraction,
+	DiscordAPIError,
 	DiscordjsError,
 	DiscordjsErrorCodes,
 	EmbedBuilder,
 	Events,
+	RESTJSONErrorCodes,
 	StringSelectMenuInteraction,
 } from 'discord.js';
 
@@ -27,15 +29,14 @@ export default {
 		if (interaction.user.bot) return; // User is a bot
 
 		try {
-			const isChatCommand = interaction instanceof ChatInputCommandInteraction;
 			let deferPromise: Promise<unknown>;
 			let cmdPromise: Promise<CommandResponse> | Promise<{ content: string }>;
 
-			if (isChatCommand) {
-				const command = interaction.client.commands.get(interaction.commandName);
-
+			if (interaction instanceof ChatInputCommandInteraction) {
 				// Start deferring, but DON'T await it yet
 				deferPromise = interaction.commandName === 'donate' ? interaction.deferReply({ ephemeral: true }) : interaction.deferReply();
+
+				const command = interaction.client.commands.get(interaction.commandName);
 
 				// Start command execution immediately
 				cmdPromise = command ? command.execute(interaction, now) : Promise.resolve({ content: 'That command does not exists!' });
@@ -51,20 +52,31 @@ export default {
 			const [deferResult, cmdResult] = await Promise.allSettled([deferPromise, cmdPromise]);
 
 			if (deferResult.status === 'rejected') {
-				console.log('\n\nDEFER REJECTED!!');
+				console.log('\n\nDEFER REJECTED!! Reason:' + deferResult.reason + '\n----------\n');
 
 				// If the command was fulfilled, try to reply anyway
 				if (cmdResult.status === 'fulfilled') {
 					try {
 						await interaction.reply(cmdResult.value);
 					} catch (e) {
-						console.log('\nAFTER DEFER REJECTED, REPLY FAILED:');
-						console.error(e);
-						console.log('===');
+						if (e instanceof DiscordAPIError && e.code === RESTJSONErrorCodes.UnknownInteraction) {
+							console.log('AFTER DEFER REJECTED, REPLY FAILED: UnknownInteraction');
+							await interaction.editReply(cmdResult.value).catch((e) => {
+								console.error(e);
+							});
+							console.log('\n----------\n');
+							await interaction.followUp(cmdResult.value).catch((e) => {
+								console.error(e);
+							});
+							console.log('\n=========\n');
+						} else {
+							console.log('AFTER DEFER REJECTED, REPLY FAILED:');
+							console.error(e);
+						}
 					}
 				}
 
-				console.error(deferResult.reason);
+				console.log('----------');
 				return;
 			}
 
