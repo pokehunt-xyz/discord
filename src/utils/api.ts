@@ -253,7 +253,11 @@ export async function runCommand(interaction: ChatInputCommandInteraction | Mess
 		const timeout = setTimeout(() => {
 			console.log(`Command: ${command} timed out after 30 seconds!`);
 			pendingReplies.delete(payloadID);
-			reject(new CustomError('The PokéHunt API did not reply within 30 seconds, please try again'));
+			reject(
+				new CustomError(
+					'The PokéHunt API did not reply within 30 seconds, please try again. If this keeps happening, please contact developers in https://discord.gg/cpYkJzd'
+				)
+			);
 		}, 30_000); // adjust as needed
 
 		pendingReplies.set(payloadID, { resolve, reject, timeout });
@@ -298,7 +302,11 @@ export async function runCallbackCommand(interaction: ButtonInteraction | String
 		const timeout = setTimeout(() => {
 			console.log('Callback timed out after 30 seconds!');
 			pendingReplies.delete(payloadID);
-			reject(new CustomError('The PokéHunt API did not reply within 30 seconds, please try again'));
+			reject(
+				new CustomError(
+					'The PokéHunt API did not reply within 30 seconds, please try again. If this keeps happening, please contact developers in https://discord.gg/cpYkJzd'
+				)
+			);
 		}, 30_000); // adjust as needed
 
 		pendingReplies.set(payloadID, { resolve, reject, timeout });
