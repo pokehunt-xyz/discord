@@ -6,8 +6,8 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('profile')
-		.setDescription('Check your profile card')
-		.addUserOption((option) => option.setName('user').setDescription('The user you want to view the profile off'))
+		.setDescription('View your profile card, or that of someone else')
+		.addUserOption((option) => option.setName('user').setDescription('The user you want to view the profile of'))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

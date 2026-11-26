@@ -7,7 +7,7 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('pay')
-		.setDescription('Pay someone some credits or redeems')
+		.setDescription('Pay credits or redeems to someone')
 		.addUserOption((option) => option.setName('user').setDescription('The user you want to pay').setRequired(true))
 		.addIntegerOption((option) => option.setName('amount').setDescription('The amount you want to pay').setMinValue(1).setRequired(true))
 		.addStringOption((option) =>

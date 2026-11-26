@@ -6,7 +6,7 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('hint')
-		.setDescription('Get a hint for the spawned Pokémon name')
+		.setDescription('Get a hint for the Pokémon that spawned')
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

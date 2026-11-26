@@ -7,7 +7,7 @@ export default {
 	data: new SlashCommandBuilder()
 		.setName('buy')
 		.setDescription('Buy rare candies to level up your Pokémon')
-		.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon you want to gift (-1 for latest)'))
+		.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of your Pokémon (-1 for latest), default: 0'))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

@@ -7,7 +7,7 @@ export default {
 	data: new SlashCommandBuilder()
 		.setName('dex')
 		.setDescription('Get information about a specific Pokémon')
-		.addStringOption((option) => option.setName('pokemon').setDescription('The Pokémon, move or type you want information about').setRequired(true))
+		.addStringOption((option) => option.setName('pokemon').setDescription('The name or Pokédex number of the Pokémon').setRequired(true))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

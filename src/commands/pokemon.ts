@@ -10,8 +10,8 @@ const natureOptions = natures.map((n) => {
 export default {
 	data: new SlashCommandBuilder()
 		.setName('pokemon')
-		.setDescription('Check all your Pokémon')
-		.addIntegerOption((option) => option.setName('page').setDescription('The page to view (-1 for latest)').setMinValue(-1))
+		.setDescription('View your Pokémon')
+		.addIntegerOption((option) => option.setName('page').setDescription('The page to view (-1 for latest), default: 1'))
 		// .addBooleanOption((option) => option.setName('favorite').setDescription('Only show favorite Pokémon'))
 		// .addBooleanOption((option) => option.setName('shiny').setDescription('Only show shiny Pokémon'))
 		.addStringOption((option) => option.setName('name').setDescription('The Pokémon name to search for'))

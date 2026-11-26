@@ -7,7 +7,7 @@ export default {
 	data: new SlashCommandBuilder()
 		.setName('favorite')
 		.setDescription('Set or unset your Pokémon as favorite')
-		.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon you want to set as favorite (-1 for latest)'))
+		.addStringOption((option) => option.setName('id').setDescription('The ID(s) or nickname of your Pokémon, default: 0'))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

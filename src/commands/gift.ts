@@ -7,9 +7,9 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('gift')
-		.setDescription('Gift someone a Pokémon')
-		.addUserOption((option) => option.setName('user').setDescription('The user you want to pay').setRequired(true))
-		.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon you want to gift (-1 for latest)'))
+		.setDescription('Gift a Pokémon to someone')
+		.addUserOption((option) => option.setName('user').setDescription('The user you want to gift to').setRequired(true))
+		.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of your Pokémon (-1 for latest), default: 0'))
 		.setContexts([InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

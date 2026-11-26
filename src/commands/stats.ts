@@ -7,9 +7,7 @@ export default {
 	data: new SlashCommandBuilder()
 		.setName('stats')
 		.setDescription('View statistics about a Pokémon')
-		.addStringOption((option) =>
-			option.setName('pokemon').setDescription('The Pokémon you want statistics about, add "shiny" for only shiny ones').setRequired(true)
-		)
+		.addStringOption((option) => option.setName('pokemon').setDescription('The Pokémon, add shiny for only shiny Pokémon').setRequired(true))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

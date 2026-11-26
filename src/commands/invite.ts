@@ -6,7 +6,7 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('invite')
-		.setDescription('View the invite link and support server')
+		.setDescription('Get the invite link and support link')
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

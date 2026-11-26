@@ -6,8 +6,8 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('moves')
-		.setDescription('Check the moves of a Pokémon')
-		.addStringOption((option) => option.setName('pokemon').setDescription('The Pokémon you want the information for (-1 for latest)'))
+		.setDescription('View the moves of a Pokémon')
+		.addStringOption((option) => option.setName('pokemon').setDescription('The ID, nickname or name of a Pokémon (-1 for latest), default: 0'))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

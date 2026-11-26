@@ -11,7 +11,7 @@ export default {
 			subcommand
 				.setName('view')
 				.setDescription('View your teams')
-				.addIntegerOption((option) => option.setName('page').setDescription('The page to view (-1 for latest)').setMinValue(-1))
+				.addIntegerOption((option) => option.setName('page').setDescription('The page to view (-1 for latest), default: 1'))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
@@ -24,14 +24,14 @@ export default {
 				.setName('add')
 				.setDescription('Add a Pokémon to a team')
 				.addStringOption((option) => option.setName('team').setDescription('The name of the team').setRequired(true))
-				.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon').setRequired(true))
+				.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of your Pokémon (-1 for latest), default: 0').setRequired(true))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('remove')
 				.setDescription('Remove a Pokémon from a team')
 				.addStringOption((option) => option.setName('team').setDescription('The name of the team').setRequired(true))
-				.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon').setRequired(true))
+				.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of the Pokémon (-1 for latest), default: 0').setRequired(true))
 		)
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 

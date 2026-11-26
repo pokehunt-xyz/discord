@@ -7,11 +7,9 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('gamble')
-		.setDescription('Gamble your credits with others')
+		.setDescription('Gamble credits with someone')
 		.addUserOption((option) => option.setName('user').setDescription('The user you want to gamble with').setRequired(true))
-		.addIntegerOption((option) =>
-			option.setName('amount').setDescription('The amount you want to gamble').setRequired(true).setMinValue(250).setMaxValue(10000)
-		)
+		.addIntegerOption((option) => option.setName('amount').setDescription('The amount of credits').setRequired(true).setMinValue(250).setMaxValue(10000))
 		.setContexts([InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

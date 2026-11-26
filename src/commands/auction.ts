@@ -14,8 +14,38 @@ export default {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('listings')
-				.setDescription('List the Pokémon you have on auction')
-				.addIntegerOption((option) => option.setName('page').setDescription('The page to view (-1 for latest)').setMinValue(-1))
+				.setDescription('View the Pokémon you put on the auction')
+				.addIntegerOption((option) => option.setName('page').setDescription('The page to view (-1 for latest), default: 1'))
+				// .addBooleanOption((option) => option.setName('shiny').setDescription('Only show shiny Pokémon'))
+				.addStringOption((option) => option.setName('name').setDescription('The Pokémon name to search for'))
+				.addIntegerOption((option) => option.setName('maxlevel').setDescription('The maximum level to search for').setMinValue(1).setMaxValue(100))
+				.addIntegerOption((option) => option.setName('minlevel').setDescription('The minimum level to search for').setMinValue(1).setMaxValue(100))
+				.addIntegerOption((option) => option.setName('maxiv').setDescription('The maximum IV to search for').setMinValue(1).setMaxValue(100))
+				.addIntegerOption((option) => option.setName('miniv').setDescription('The minimum IV to search for').setMinValue(1).setMaxValue(100))
+				.addIntegerOption((option) => option.setName('maxattack').setDescription('The maximum attack IV to search for').setMinValue(0).setMaxValue(31))
+				.addIntegerOption((option) => option.setName('minattack').setDescription('The minimum attack IV to search for').setMinValue(0).setMaxValue(31))
+				.addIntegerOption((option) => option.setName('maxspattack').setDescription('The maximum special attack IV to search for').setMinValue(0).setMaxValue(31)) // eslint-disable-line prettier/prettier
+				.addIntegerOption((option) => option.setName('minspattack').setDescription('The minimum special attack IV to search for').setMinValue(0).setMaxValue(31)) // eslint-disable-line prettier/prettier
+				.addIntegerOption((option) => option.setName('maxdefence').setDescription('The maximum defence IV to search for').setMinValue(0).setMaxValue(31))
+				.addIntegerOption((option) => option.setName('mindefence').setDescription('The minimum defence IV to search for').setMinValue(0).setMaxValue(31))
+				.addIntegerOption((option) => option.setName('maxspdefence').setDescription('The maximum special defence IV to search for').setMinValue(0).setMaxValue(31)) // eslint-disable-line prettier/prettier
+				.addIntegerOption((option) => option.setName('minspdefence').setDescription('The minimum special defence IV to search for').setMinValue(0).setMaxValue(31)) // eslint-disable-line prettier/prettier
+				.addIntegerOption((option) => option.setName('maxhp').setDescription('The maximum hp IV to search for').setMinValue(0).setMaxValue(31))
+				.addIntegerOption((option) => option.setName('minhp').setDescription('The minimum hp IV to search for').setMinValue(0).setMaxValue(31))
+				.addIntegerOption((option) => option.setName('maxspeed').setDescription('The maximum speed IV to search for').setMinValue(0).setMaxValue(31))
+				.addIntegerOption((option) => option.setName('minspeed').setDescription('The minimum speed IV to search for').setMinValue(0).setMaxValue(31))
+				.addStringOption((option) =>
+					option
+						.setName('nature')
+						.setDescription('The Pokémon nature to search for')
+						.addChoices(...natureOptions)
+				)
+		)
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('search')
+				.setDescription('Search for Pokémon listed on the auction')
+				.addIntegerOption((option) => option.setName('page').setDescription('The page to view (-1 for latest), default: 1'))
 				// .addBooleanOption((option) => option.setName('shiny').setDescription('Only show shiny Pokémon'))
 				.addStringOption((option) => option.setName('name').setDescription('The Pokémon name to search for'))
 				.addIntegerOption((option) => option.setName('maxlevel').setDescription('The maximum level to search for').setMinValue(1).setMaxValue(100))
@@ -44,17 +74,15 @@ export default {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('create')
-				.setDescription('Create an auction for your Pokémon')
-				.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon you want to put on auction (-1 for latest)').setRequired(true))
-				.addIntegerOption((option) => option.setName('insta').setDescription('Instantly end auction when someone bids higher than this').setMinValue(1))
-				.addIntegerOption((option) => option.setName('min').setDescription('The minimum amount of credits you want to start the auction with').setMinValue(1))
-				.addIntegerOption((option) =>
-					option.setName('jump').setDescription('The minimum increase of credits required to outbid the previous bid').setMinValue(1)
-				)
+				.setDescription('Put a Pokémon on the auction')
+				.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of your Pokémon (-1 for latest)').setRequired(true))
+				.addIntegerOption((option) => option.setName('insta').setDescription('The bid that ends the auction immediately, default: none').setMinValue(1))
+				.addIntegerOption((option) => option.setName('min').setDescription('The minimum first bid, default: none').setMinValue(1))
+				.addIntegerOption((option) => option.setName('jump').setDescription('The minimum increase of a bid, default: 1').setMinValue(1))
 				.addIntegerOption((option) =>
 					option
 						.setName('hours')
-						.setDescription('The amount of hours to run the auction for')
+						.setDescription('How long the auction runs, default: 36 hours')
 						.setMinValue(12)
 						.setMaxValue(30 * 24)
 				)
@@ -62,58 +90,23 @@ export default {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('bid')
-				.setDescription('Bid for a Pokémon on auction')
-				.addStringOption((option) =>
-					option.setName('id').setDescription('The ID of the auction you want to bid on').setMinLength(1).setMaxLength(6).setRequired(true)
-				)
-				.addIntegerOption((option) => option.setName('bid').setDescription('The amount of credits you want to bid').setMinValue(1).setRequired(true))
+				.setDescription('Bid on an auction')
+				.addStringOption((option) => option.setName('id').setDescription('The auction ID').setMinLength(1).setMaxLength(6).setRequired(true))
+				.addIntegerOption((option) => option.setName('bid').setDescription('Your bid in credits').setMinValue(1).setRequired(true))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('view')
-				.setDescription('View the details of a Pokémon on auction')
-				.addStringOption((option) =>
-					option.setName('id').setDescription('The ID of the auction you want to view').setMinLength(1).setMaxLength(6).setRequired(true)
-				)
+				.setDescription('View an auction')
+				.addStringOption((option) => option.setName('id').setDescription('The auction ID').setMinLength(1).setMaxLength(6).setRequired(true))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('end')
-				.setDescription('End the auction of your Pokémon')
-				.addStringOption((option) =>
-					option.setName('id').setDescription('The ID of the auction you want to end').setMinLength(1).setMaxLength(6).setRequired(true)
-				)
+				.setDescription('End your own auction')
+				.addStringOption((option) => option.setName('id').setDescription('The auction ID').setMinLength(1).setMaxLength(6).setRequired(true))
 		)
-		.addSubcommand((subcommand) =>
-			subcommand
-				.setName('search')
-				.setDescription('Search for Pokémon listed on the auction')
-				.addIntegerOption((option) => option.setName('page').setDescription('The page to view (-1 for latest)').setMinValue(-1))
-				// .addBooleanOption((option) => option.setName('shiny').setDescription('Only show shiny Pokémon'))
-				.addStringOption((option) => option.setName('name').setDescription('The Pokémon name to search for'))
-				.addIntegerOption((option) => option.setName('maxlevel').setDescription('The maximum level to search for').setMinValue(1).setMaxValue(100))
-				.addIntegerOption((option) => option.setName('minlevel').setDescription('The minimum level to search for').setMinValue(1).setMaxValue(100))
-				.addIntegerOption((option) => option.setName('maxiv').setDescription('The maximum IV to search for').setMinValue(1).setMaxValue(100))
-				.addIntegerOption((option) => option.setName('miniv').setDescription('The minimum IV to search for').setMinValue(1).setMaxValue(100))
-				.addIntegerOption((option) => option.setName('maxattack').setDescription('The maximum attack IV to search for').setMinValue(0).setMaxValue(31))
-				.addIntegerOption((option) => option.setName('minattack').setDescription('The minimum attack IV to search for').setMinValue(0).setMaxValue(31))
-				.addIntegerOption((option) => option.setName('maxspattack').setDescription('The maximum special attack IV to search for').setMinValue(0).setMaxValue(31)) // eslint-disable-line prettier/prettier
-				.addIntegerOption((option) => option.setName('minspattack').setDescription('The minimum special attack IV to search for').setMinValue(0).setMaxValue(31)) // eslint-disable-line prettier/prettier
-				.addIntegerOption((option) => option.setName('maxdefence').setDescription('The maximum defence IV to search for').setMinValue(0).setMaxValue(31))
-				.addIntegerOption((option) => option.setName('mindefence').setDescription('The minimum defence IV to search for').setMinValue(0).setMaxValue(31))
-				.addIntegerOption((option) => option.setName('maxspdefence').setDescription('The maximum special defence IV to search for').setMinValue(0).setMaxValue(31)) // eslint-disable-line prettier/prettier
-				.addIntegerOption((option) => option.setName('minspdefence').setDescription('The minimum special defence IV to search for').setMinValue(0).setMaxValue(31)) // eslint-disable-line prettier/prettier
-				.addIntegerOption((option) => option.setName('maxhp').setDescription('The maximum hp IV to search for').setMinValue(0).setMaxValue(31))
-				.addIntegerOption((option) => option.setName('minhp').setDescription('The minimum hp IV to search for').setMinValue(0).setMaxValue(31))
-				.addIntegerOption((option) => option.setName('maxspeed').setDescription('The maximum speed IV to search for').setMinValue(0).setMaxValue(31))
-				.addIntegerOption((option) => option.setName('minspeed').setDescription('The minimum speed IV to search for').setMinValue(0).setMaxValue(31))
-				.addStringOption((option) =>
-					option
-						.setName('nature')
-						.setDescription('The Pokémon nature to search for')
-						.addChoices(...natureOptions)
-				)
-		)
+
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

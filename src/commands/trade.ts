@@ -11,13 +11,14 @@ export default {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('start')
-				.setDescription('Start a trade with a user')
+				.setDescription('Start a trade with someone')
 				.addUserOption((option) => option.setName('user').setDescription('The user you want to trade with').setRequired(true))
 		)
+		.addSubcommand((subcommand) => subcommand.setName('view').setDescription('View the current trade'))
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('add')
-				.setDescription('Add an item to the trade')
+				.setDescription('Add a Pokémon or currency to the trade')
 				.addStringOption((option) => option.setName('value').setDescription('The Pokémon ID or amount of currency you want to add').setRequired(true))
 				.addStringOption((option) =>
 					option
@@ -29,7 +30,7 @@ export default {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('remove')
-				.setDescription('Remove an item from the trade')
+				.setDescription('Remove a Pokémon or currency from the trade')
 				.addStringOption((option) => option.setName('value').setDescription('The Pokémon ID or amount of currency you want to remove').setRequired(true))
 				.addStringOption((option) =>
 					option
@@ -38,9 +39,8 @@ export default {
 						.addChoices({ name: 'Pokémon', value: 'pokemon' }, { name: 'Credits', value: 'credits' }, { name: 'Redeems', value: 'redeems' })
 				)
 		)
-		.addSubcommand((subcommand) => subcommand.setName('cancel').setDescription('Cancel a trade and get your items back'))
-		.addSubcommand((subcommand) => subcommand.setName('confirm').setDescription('Confirm the trade'))
-		.addSubcommand((subcommand) => subcommand.setName('view').setDescription('View the trade'))
+		.addSubcommand((subcommand) => subcommand.setName('cancel').setDescription('Cancel the current trade'))
+		.addSubcommand((subcommand) => subcommand.setName('confirm').setDescription('Confirm the current trade'))
 		.setContexts([InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

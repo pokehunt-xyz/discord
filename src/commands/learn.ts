@@ -6,9 +6,9 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('learn')
-		.setDescription('Learn a Pokémon a specific move')
-		.addStringOption((option) => option.setName('move').setDescription('The move you want to learn your pokemon'))
-		.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon you want to learn a move (-1 for latest)'))
+		.setDescription('Learn your Pokémon a specific move')
+		.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of your Pokémon (-1 for latest), default: 0'))
+		.addStringOption((option) => option.setName('move').setDescription('The move, default: view moves'))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

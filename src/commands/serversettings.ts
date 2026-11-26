@@ -8,28 +8,28 @@ export default {
 	data: new SlashCommandBuilder()
 		.setName('serversettings')
 		.setDescription('Change your server settings')
+		.addSubcommand((subcommand) => subcommand.setName('reset').setDescription('Reset the settings of this server'))
+		.addSubcommand((subcommand) => subcommand.setName('view').setDescription('View the settings of this server'))
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('redirect')
-				.setDescription('Let all Pokémon spawn in one channel')
-				.addChannelOption((option) => option.setName('channel').setDescription('The channel all Pokémon should spawn in, leave empty to remove'))
-		)
-		.addSubcommand((subcommand) =>
-			subcommand
-				.setName('spawns')
-				.setDescription('Disable Pokémon spawns in a specific channel')
-				.addChannelOption((option) => option.setName('channel').setDescription('The channel Pokémon spawns should be disabled in'))
-				.addBooleanOption((option) => option.setName('enable').setDescription('Enable Pokémon spawns'))
+				.setDescription('Let all Pokémon spawn in one channel (or stop that)')
+				.addChannelOption((option) => option.setName('channel').setDescription('The channel, default: current channel'))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('commands')
-				.setDescription('Disable commands in a specific channel')
-				.addChannelOption((option) => option.setName('channel').setDescription('The channel Pokémon commands should be disabled in'))
-				.addBooleanOption((option) => option.setName('enable').setDescription('Enable Pokémon commands'))
+				.setDescription('Enable or disable commands in a channel')
+				.addChannelOption((option) => option.setName('channel').setDescription('The channel, default: current channel'))
+				.addBooleanOption((option) => option.setName('enable').setDescription('Enable or disable, default: toggle'))
 		)
-		.addSubcommand((subcommand) => subcommand.setName('view').setDescription('View all server settings'))
-		.addSubcommand((subcommand) => subcommand.setName('reset').setDescription('Reset all server settings'))
+		.addSubcommand((subcommand) =>
+			subcommand
+				.setName('spawns')
+				.setDescription('Enable or disable spawns in a channel')
+				.addChannelOption((option) => option.setName('channel').setDescription('The channel, default: current channel'))
+				.addBooleanOption((option) => option.setName('enable').setDescription('Enable or disable, default: toggle'))
+		)
 		.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
 		.setContexts([InteractionContextType.Guild]),
 

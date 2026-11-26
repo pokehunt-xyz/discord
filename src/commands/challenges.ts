@@ -6,7 +6,7 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('challenges')
-		.setDescription('Complete the daily challenges to get rewards')
+		.setDescription('View your daily challenges')
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

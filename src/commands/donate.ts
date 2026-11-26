@@ -6,8 +6,8 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('donate')
-		.setDescription('Donate and get redeems')
-		.addIntegerOption((option) => option.setName('amount').setDescription('The amount you want to donate').setMinValue(1))
+		.setDescription('Support the bot')
+		.addIntegerOption((option) => option.setName('amount').setDescription('The donation amount in euro, default: show instructions').setMinValue(1))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

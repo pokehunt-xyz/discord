@@ -16,18 +16,18 @@ export default {
 	data: new SlashCommandBuilder()
 		.setName('redeem')
 		.setDescription('Find out how to use, and actually use your redeems')
-		.addSubcommand((subcommand) => subcommand.setName('info').setDescription('Get information about redeems'))
-		.addSubcommand((subcommand) => subcommand.setName('balance').setDescription('Find out how many redeems you have'))
-		.addSubcommand((subcommand) => subcommand.setName('credits').setDescription('Redeem 15,000 credits for 1 redeem'))
+		.addSubcommand((subcommand) => subcommand.setName('balance').setDescription('Check the amount of redeems you have'))
+		.addSubcommand((subcommand) => subcommand.setName('credits').setDescription('Redeem 15,000 credits'))
+		.addSubcommand((subcommand) => subcommand.setName('info').setDescription('View information about redeems'))
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('spawn')
-				.setDescription('Spawn a Pokémon for 1 redeem')
-				.addStringOption((option) =>
-					option.setName('pokemon').setDescription('The Pokémon you want to spawn (use "random" for a random one).').setRequired(true)
+				.setDescription('Redeem a Pokémon of your choice')
+				.addStringOption((option) => option.setName('pokemon').setDescription('The Pokémon to redeem (use "random" for a random Pokémon)').setRequired(true))
+				.addBooleanOption((option) => option.setName('autocatch').setDescription('Catch it directly, default: spawn in channel'))
+				.addChannelOption((option) =>
+					option.setName('channel').setDescription('The channel to spawn the Pokémon in, default: current channel').addChannelTypes(ChannelType.GuildText)
 				)
-				.addBooleanOption((option) => option.setName('autocatch').setDescription('Automatically catch the Pokémon and DONT spawn in the channel.'))
-				.addChannelOption((option) => option.setName('channel').setDescription('Send the Pokémon to a different channel, useful for surprise spawns'))
 		)
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 

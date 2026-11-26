@@ -7,7 +7,7 @@ export default {
 	data: new SlashCommandBuilder()
 		.setName('select')
 		.setDescription('Select a Pokémon')
-		.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon you want to select (-1 for latest)').setRequired(true))
+		.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of your Pokémon (0: unselect)').setRequired(true))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

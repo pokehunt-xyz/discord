@@ -7,33 +7,33 @@ export default {
 	data: new SlashCommandBuilder()
 		.setName('settings')
 		.setDescription('Change your settings')
+		.addSubcommand((subcommand) => subcommand.setName('link').setDescription('Link your account with Telegram'))
+		.addSubcommand((subcommand) => subcommand.setName('reset').setDescription('Reset your settings'))
+		.addSubcommand((subcommand) => subcommand.setName('view').setDescription('View your settings'))
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('profile')
-				.setDescription('Set your profile to public available')
-				.addBooleanOption((option) => option.setName('enable').setDescription('Set your profile to be public'))
+				.setDescription('Make your profile public or private')
+				.addBooleanOption((option) => option.setName('enable').setDescription('Enable or disable, default: toggle'))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('levelup')
-				.setDescription('Enable/disable Pokémon level up messages')
-				.addBooleanOption((option) => option.setName('enable').setDescription('Enable level up messages'))
+				.setDescription('Enable or disable level up messages')
+				.addBooleanOption((option) => option.setName('enable').setDescription('Enable or disable, default: toggle'))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('dmnotifications')
-				.setDescription('Enable/disable DM notifications')
-				.addBooleanOption((option) => option.setName('enable').setDescription('Enable DM notifications'))
+				.setDescription('Enable or disable DM notifications')
+				.addBooleanOption((option) => option.setName('enable').setDescription('Enable or disable, default: toggle'))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('username')
-				.setDescription('Enable/disable showing your username in leaderboards')
-				.addBooleanOption((option) => option.setName('enable').setDescription('Enable showing your username in leaderboards'))
+				.setDescription('Show or hide your username')
+				.addBooleanOption((option) => option.setName('enable').setDescription('Enable or disable, default: toggle'))
 		)
-		.addSubcommand((subcommand) => subcommand.setName('link').setDescription('Link your account with Telegram'))
-		.addSubcommand((subcommand) => subcommand.setName('view').setDescription('View all your settings'))
-		.addSubcommand((subcommand) => subcommand.setName('reset').setDescription('Reset all your settings'))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

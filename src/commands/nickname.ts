@@ -6,19 +6,19 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('nickname')
-		.setDescription('Give a Pokémon a nickname (or remove it)')
+		.setDescription('Give a Pokémon a nickname, or remove it')
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('set')
 				.setDescription('Set the nickname of your Pokémon')
-				.addStringOption((option) => option.setName('nickname').setDescription('The nickname to give the Pokémon').setRequired(true).setMaxLength(32))
-				.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon you want to give a nickname (-1 for latest)'))
+				.addStringOption((option) => option.setName('nickname').setDescription('The nickname to set').setRequired(true).setMaxLength(32))
+				.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of your Pokémon (-1 for latest), default: 0'))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('reset')
 				.setDescription('Remove the nickname of your Pokémon')
-				.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon you want to give a nickname (-1 for latest)'))
+				.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of your Pokémon (-1 for latest), default: 0'))
 		)
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 

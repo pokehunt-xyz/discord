@@ -6,7 +6,7 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('weak')
-		.setDescription('Find out which pokemon or type is immune, resistant or weak others')
+		.setDescription('Find out which types are weak or strong against a Pokémon or type')
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('pokemon')

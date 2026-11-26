@@ -7,8 +7,8 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('duel')
-		.setDescription('Duel (fight) with someone')
-		.addUserOption((option) => option.setName('user').setDescription('The user you want to gamble with').setRequired(true))
+		.setDescription('Invite someone to a duel')
+		.addUserOption((option) => option.setName('user').setDescription('The user you want to duel with').setRequired(true))
 		.setContexts([InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

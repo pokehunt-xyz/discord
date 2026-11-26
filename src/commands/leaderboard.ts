@@ -6,11 +6,11 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('leaderboard')
-		.setDescription('Check the leaderboard')
+		.setDescription('View the leaderboard')
 		.addStringOption((option) =>
 			option
 				.setName('category')
-				.setDescription('The leaderboard category you want to see')
+				.setDescription('The leaderboard category')
 				.setRequired(true)
 				.addChoices(
 					{ name: 'pokemon', value: 'pokemon' },

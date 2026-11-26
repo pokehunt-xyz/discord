@@ -6,7 +6,7 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('shop')
-		.setDescription('Buy stones, bracelets, forms and rare candies for your Pokémon')
+		.setDescription('Buy items for your Pokémon')
 		.addStringOption((option) =>
 			option
 				.setName('type')
@@ -21,7 +21,7 @@ export default {
 					{ name: 'Mega Evolution & Forms', value: 'forms' }
 				)
 		)
-		.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon you want to buy an item for (-1 for latest)'))
+		.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of your Pokémon (-1 for latest), default: 0'))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

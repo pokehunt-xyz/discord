@@ -6,8 +6,8 @@ import { CommandResponse } from '../utils/types';
 export default {
 	data: new SlashCommandBuilder()
 		.setName('help')
-		.setDescription('Get help using PokéHunt')
-		.addStringOption((option) => option.setName('command').setDescription('The command you need help with'))
+		.setDescription('View the commands and how to use them')
+		.addStringOption((option) => option.setName('command').setDescription('The command you want help with, default: all commands'))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {

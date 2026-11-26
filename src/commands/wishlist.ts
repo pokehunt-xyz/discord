@@ -10,14 +10,14 @@ export default {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('edit')
-				.setDescription('Edit (toggle) a Pokémon from your wishlist')
-				.addStringOption((option) => option.setName('pokemon').setDescription('The Pokémon you want to add/remove').setRequired(true))
+				.setDescription('Add or remove a Pokémon from your wishlist')
+				.addStringOption((option) => option.setName('pokemon').setDescription('The name or Pokédex number of the Pokémon').setRequired(true))
 		)
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName('view')
 				.setDescription('View your wishlist')
-				.addIntegerOption((option) => option.setName('page').setDescription('The page to view (-1 for latest)').setMinValue(-1))
+				.addIntegerOption((option) => option.setName('page').setDescription('The page to view (-1 for latest), default: 1'))
 		)
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 

@@ -7,8 +7,8 @@ export default {
 	data: new SlashCommandBuilder()
 		.setName('release')
 		.setDescription('Release (delete) a Pokémon')
-		.addStringOption((option) => option.setName('id').setDescription('The ID of the Pokémon you want to release (-1 for latest'))
-		.addBooleanOption((option) => option.setName('force').setDescription('Skip the confirmation menu'))
+		.addStringOption((option) => option.setName('id').setDescription('The ID or nickname of your Pokémon (-1 for latest), default: 0'))
+		.addBooleanOption((option) => option.setName('force').setDescription('Release without confirmation, default: ask for confirmation first'))
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {
