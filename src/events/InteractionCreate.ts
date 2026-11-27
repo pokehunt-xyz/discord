@@ -12,6 +12,7 @@ import {
 } from 'discord.js';
 
 import { runCallbackCommand } from '../utils/api';
+import { isForbiddenGuild, LEAVE_MESSAGE, leaveGuild } from '../utils/allowedGuilds';
 import { APIError, CustomError, IgnoreError, InvalidOptionError, OnlyInGuildError } from '../utils/error';
 import { CommandResponse } from '../utils/types';
 
@@ -27,6 +28,18 @@ export default {
 		)
 			return;
 		if (interaction.user.bot) return; // User is a bot
+
+		// In servers where the bot should not be (see ALLOWED_GUILD_IDS): commands get the message and the bot leaves, buttons and menus do nothing
+		if (isForbiddenGuild(interaction.guildId)) {
+			if (interaction instanceof ChatInputCommandInteraction) {
+				const reply = (content: string): Promise<unknown> => interaction.reply({ content });
+				// Not in the server (e.g. a user installed app): we can only reply
+				if (interaction.guild) {
+					if (!(await leaveGuild(interaction.guild, reply))) await reply(LEAVE_MESSAGE).catch(() => null);
+				} else await reply(LEAVE_MESSAGE).catch(() => null);
+			} else await interaction.deferUpdate().catch(() => null);
+			return;
+		}
 
 		try {
 			let deferPromise: Promise<unknown>;
