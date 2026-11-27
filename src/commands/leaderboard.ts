@@ -10,21 +10,30 @@ export default {
 		.addStringOption((option) =>
 			option
 				.setName('category')
-				.setDescription('The leaderboard category')
-				.setRequired(true)
+				.setDescription('The leaderboard category, default: all-round')
 				.addChoices(
-					{ name: 'pokemon', value: 'pokemon' },
-					{ name: 'balance', value: 'balance' },
-					{ name: 'donations', value: 'donations' },
-					{ name: 'hunts', value: 'hunts' },
-					{ name: 'votes', value: 'votes' },
-					{ name: 'allRound', value: 'allRound' }
+					{ name: 'All-round', value: 'allRound' },
+					{ name: 'Pokédex', value: 'dex' },
+					{ name: 'Shinies', value: 'shinies' },
+					{ name: 'Catches', value: 'catches' },
+					{ name: 'Hunts', value: 'hunts' },
+					{ name: 'Duels', value: 'duels' },
+					{ name: 'Vote streak', value: 'votes' },
+					{ name: 'Balance', value: 'balance' },
+					{ name: 'Donations', value: 'donations' }
 				)
+		)
+		.addStringOption((option) =>
+			option
+				.setName('period')
+				.setDescription('The period (only for catches and hunts), default: this week')
+				.addChoices({ name: 'This week', value: 'week' }, { name: 'This month', value: 'month' }, { name: 'All time', value: 'all' })
 		)
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
 
 	async execute(interaction: ChatInputCommandInteraction, now: number): Promise<CommandResponse> {
 		const category = interaction.options.getString('category');
-		return await runCommand(interaction, now, 'leaderboard', { category });
+		const period = interaction.options.getString('period');
+		return await runCommand(interaction, now, 'leaderboard', { category, period });
 	},
 };
