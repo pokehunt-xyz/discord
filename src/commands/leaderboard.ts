@@ -14,19 +14,19 @@ export default {
 				.addChoices(
 					{ name: 'All-round', value: 'allRound' },
 					{ name: 'Pokédex', value: 'dex' },
-					{ name: 'Shinies', value: 'shinies' },
 					{ name: 'Catches', value: 'catches' },
 					{ name: 'Hunts', value: 'hunts' },
 					{ name: 'Duels', value: 'duels' },
 					{ name: 'Vote streak', value: 'votes' },
 					{ name: 'Balance', value: 'balance' },
-					{ name: 'Donations', value: 'donations' }
+					{ name: 'Market sales', value: 'marketSales' },
+					{ name: 'Market spending', value: 'marketSpending' }
 				)
 		)
 		.addStringOption((option) =>
 			option
 				.setName('period')
-				.setDescription('The period (only for catches and hunts), default: this week')
+				.setDescription('The period (only for catches, hunts and market), default: this week')
 				.addChoices({ name: 'This week', value: 'week' }, { name: 'This month', value: 'month' }, { name: 'All time', value: 'all' })
 		)
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.Guild]),
